@@ -1,0 +1,29 @@
+{
+  "name": "@jarvis/server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "JARVIS API server: connection management, schema introspection, query compilation and execution.",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch --conditions=development --env-file-if-exists=../../.env src/index.ts",
+    "build": "esbuild src/index.ts --bundle --platform=node --format=esm --target=node22 --packages=external --sourcemap --outfile=dist/index.js",
+    "start": "node --env-file-if-exists=../../.env --enable-source-maps dist/index.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@jarvis/shared": "0.1.0",
+    "express": "^5.3.0",
+    "helmet": "^8.3.0",
+    "mysql2": "^3.24.6",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/supertest": "^7.2.1",
+    "esbuild": "^0.28.2",
+    "supertest": "^7.3.2",
+    "tsx": "^4.23.15",
+    "vitest": "^5.1.0"
+  }
+}

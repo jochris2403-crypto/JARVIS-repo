@@ -1,0 +1,21 @@
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+.vite/
+
+# Environment & secrets — never commit
+.env
+.env.*
+!.env.example
+.jarvis-data/
+
+# Test artefacts
+test-results/
+playwright-report/
+blob-report/
+
+# OS / editor
+.DS_Store
+.idea/
+*.log

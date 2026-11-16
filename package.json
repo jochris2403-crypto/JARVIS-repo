@@ -1,0 +1,45 @@
+{
+  "name": "jarvis",
+  "version": "0.1.0",
+  "private": true,
+  "description": "JARVIS — Just A Relational Visualization & Interactive SQL. A visual MySQL exploration and management environment.",
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -k -n server,web -c cyan,magenta \"npm:dev -w @jarvis/server\" \"npm:dev -w @jarvis/web\"",
+    "build": "npm run build -w @jarvis/shared && npm run build -w @jarvis/server && npm run build -w @jarvis/web",
+    "start": "npm run start -w @jarvis/server",
+    "typecheck": "npm run typecheck --workspaces --if-present && tsc -p tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "npm run test --workspaces --if-present",
+    "test:e2e": "playwright test",
+    "db:init": "scripts/dev-db.sh init",
+    "db:start": "scripts/dev-db.sh start",
+    "db:stop": "scripts/dev-db.sh stop",
+    "db:status": "scripts/dev-db.sh status",
+    "db:seed": "scripts/dev-db.sh seed",
+    "verify": "npm run typecheck && npm run lint && npm run format:check && npm run test"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.65.1",
+    "@types/node": "^24.19.2",
+    "concurrently": "^10.0.7",
+    "eslint": "^10.15.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.8",
+    "globals": "^17.14.0",
+    "prettier": "^3.10.1",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.73.0"
+  }
+}

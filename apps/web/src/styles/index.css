@@ -1,0 +1,258 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/jetbrains-mono';
+
+/*
+ * JARVIS design tokens.
+ *
+ * Every colour used in the UI comes from these variables; components never use
+ * raw palette classes (e.g. `bg-zinc-900`). Dark is the primary theme. The
+ * values are mapped into Tailwind utilities by the `@theme inline` block below,
+ * so `bg-surface`, `text-fg-muted`, `border-border` etc. follow the theme.
+ */
+
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+:root,
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  /* Surfaces — from deepest to most elevated */
+  --bg: #0a0c0f;
+  --surface: #0e1115;
+  --surface-raised: #13171d;
+  --surface-overlay: #181d24;
+  --surface-hover: #1b2129;
+  --surface-active: #212833;
+
+  /* Lines */
+  --border: #1d232b;
+  --border-strong: #2a323d;
+
+  /* Text */
+  --fg: #e4e8ee;
+  --fg-muted: #97a1ae;
+  --fg-subtle: #5d6774;
+
+  /* Accent — restrained blue/cyan */
+  --accent: #3ab8f0;
+  --accent-strong: #63c8f5;
+  --accent-muted: rgb(58 184 240 / 0.12);
+  --accent-fg: #03121b;
+
+  /* Semantic */
+  --success: #3ecf8e;
+  --success-muted: rgb(62 207 142 / 0.12);
+  --warning: #f0b545;
+  --warning-muted: rgb(240 181 69 / 0.12);
+  --danger: #f0686a;
+  --danger-muted: rgb(240 104 106 / 0.12);
+
+  --ring: rgb(58 184 240 / 0.5);
+  --grid-dot: rgb(255 255 255 / 0.035);
+
+  --elev-overlay: 0 16px 40px -12px rgb(0 0 0 / 0.65), 0 2px 6px rgb(0 0 0 / 0.35);
+  --elev-raised: 0 1px 2px rgb(0 0 0 / 0.4);
+}
+
+[data-theme='light'] {
+  color-scheme: light;
+
+  --bg: #f6f7f9;
+  --surface: #fbfbfc;
+  --surface-raised: #ffffff;
+  --surface-overlay: #ffffff;
+  --surface-hover: #eef1f4;
+  --surface-active: #e5e9ee;
+
+  --border: #e2e6eb;
+  --border-strong: #cdd3db;
+
+  --fg: #10151b;
+  --fg-muted: #525d6b;
+  --fg-subtle: #8892a0;
+
+  --accent: #0a86c4;
+  --accent-strong: #0773a9;
+  --accent-muted: rgb(10 134 196 / 0.1);
+  --accent-fg: #ffffff;
+
+  --success: #12935b;
+  --success-muted: rgb(18 147 91 / 0.1);
+  --warning: #b77a06;
+  --warning-muted: rgb(183 122 6 / 0.1);
+  --danger: #d23f43;
+  --danger-muted: rgb(210 63 67 / 0.1);
+
+  --ring: rgb(10 134 196 / 0.45);
+  --grid-dot: rgb(16 21 27 / 0.05);
+
+  --elev-overlay: 0 16px 40px -12px rgb(16 21 27 / 0.18), 0 2px 6px rgb(16 21 27 / 0.06);
+  --elev-raised: 0 1px 2px rgb(16 21 27 / 0.06);
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-overlay: var(--surface-overlay);
+  --color-surface-hover: var(--surface-hover);
+  --color-surface-active: var(--surface-active);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-subtle: var(--fg-subtle);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-muted: var(--accent-muted);
+  --color-accent-fg: var(--accent-fg);
+  --color-success: var(--success);
+  --color-success-muted: var(--success-muted);
+  --color-warning: var(--warning);
+  --color-warning-muted: var(--warning-muted);
+  --color-danger: var(--danger);
+  --color-danger-muted: var(--danger-muted);
+  --color-ring: var(--ring);
+
+  --shadow-overlay: var(--elev-overlay);
+  --shadow-raised: var(--elev-raised);
+
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /* Deliberately tight radii — JARVIS avoids pill-shaped, overly rounded surfaces. */
+  --radius-sm: 3px;
+  --radius-md: 5px;
+  --radius-lg: 7px;
+  --radius-xl: 9px;
+
+  /* Type scale: 2xs 11.5 · xs 12 · sm 13 (body) · base 15 (headings) at 100% interface scale. */
+  --text-2xs: 0.71875rem;
+  --text-2xs--line-height: 1rem;
+  --text-sm: 0.8125rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base: 0.9375rem;
+  --text-base--line-height: 1.375rem;
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  /*
+   * Interface scale. Every size in the UI is expressed in rem, so changing the
+   * root font size scales text, controls and spacing together. `--ui-scale` is
+   * set from the user's preference (Settings → Appearance).
+   */
+  html {
+    font-size: calc(16px * var(--ui-scale, 0.7));
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    line-height: 1.5;
+    font-feature-settings: 'cv11', 'ss01', 'ss03';
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: var(--accent-muted);
+    color: var(--fg);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 1px;
+  }
+
+  /* Thin, theme-aware scrollbars */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-strong) transparent;
+  }
+
+  [data-reduced-motion='true'] *,
+  [data-reduced-motion='true'] *::before,
+  [data-reduced-motion='true'] *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@utility bg-grid {
+  background-image: radial-gradient(var(--grid-dot) 1px, transparent 1px);
+  background-size: 1.25rem 1.25rem;
+}
+
+@utility text-balance {
+  text-wrap: balance;
+}
+
+@keyframes jarvis-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes jarvis-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/*
+ * React Flow (relationship diagram) — mapped onto JARVIS tokens so it follows
+ * the theme. Table nodes and relationship lines are styled in their components.
+ */
+.react-flow {
+  --xy-background-color: transparent;
+  --xy-edge-stroke: var(--fg-subtle);
+  --xy-selection-background-color: var(--accent-muted);
+  --xy-selection-border: 1px solid var(--accent);
+  --xy-minimap-background-color: var(--surface);
+  --xy-minimap-mask-background-color: color-mix(in srgb, var(--bg) 70%, transparent);
+  --xy-controls-button-background-color: var(--surface-raised);
+  --xy-controls-button-background-color-hover: var(--surface-hover);
+  --xy-controls-button-color: var(--fg-muted);
+  --xy-controls-button-color-hover: var(--fg);
+  --xy-controls-button-border-color: var(--border);
+  --xy-attribution-background-color: transparent;
+  font-family: var(--font-sans);
+}
+
+.react-flow__controls,
+.react-flow__minimap {
+  overflow: hidden;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: var(--elev-raised);
+}
+
+.react-flow__attribution a {
+  color: var(--fg-subtle);
+}
+
+/* Table nodes draw their own selection state. */
+.react-flow__node-table.selected {
+  outline: none;
+}
