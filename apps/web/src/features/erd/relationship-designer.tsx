@@ -7,7 +7,6 @@ import {
   ReactFlowProvider,
   useNodesState,
   useReactFlow,
-  type OnSelectionChangeFunc,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { Crosshair, Expand, LayoutGrid, Maximize, Minimize, Network, Search } from 'lucide-react';
@@ -139,7 +138,6 @@ function Designer({ schema }: { schema: DatabaseSchema }) {
     const saved = useErdStore.getState().layouts[contextKey] ?? {};
     setNodes((previous) => {
       const current = new Map(fresh ? [] : previous.map((n) => [n.id, n]));
-      const wasSelected = new Set(previous.filter((n) => n.selected).map((n) => n.id));
       return graph.tables.map((table) => ({
         id: table.name,
         type: 'table' as const,
@@ -147,7 +145,7 @@ function Designer({ schema }: { schema: DatabaseSchema }) {
           saved[table.name] ??
           autoLayout[table.name] ?? { x: 0, y: 0 },
         data: { table, detail, junction: junctionNames.has(table.name) },
-        selected: wasSelected.has(table.name),
+        selectable: false,
       }));
     });
     if (!fresh) return;
@@ -185,23 +183,25 @@ function Designer({ schema }: { schema: DatabaseSchema }) {
     [graph.relationships, hiding, roles],
   );
 
-  const onSelectionChange = useCallback<OnSelectionChangeFunc>(({ nodes: picked }) => {
-    const ids = picked.map((n) => n.id);
+  /*
+   * Selection is kept in the store rather than in React Flow. React Flow clears its own
+   * selection whenever an unselected node is dragged, which made moving a table drop the
+   * current selection; with nodes non-selectable, dragging and selecting are independent.
+   */
+  const toggleSelection = useCallback((table: string, additive: boolean) => {
     const current = useErdStore.getState().selected;
-    if (ids.length !== current.length || ids.some((id, i) => id !== current[i])) {
-      useErdStore.getState().setSelection(ids);
-    }
+    const next = !additive
+      ? [table]
+      : current.includes(table)
+        ? current.filter((t) => t !== table)
+        : [...current, table];
+    useErdStore.getState().setSelection(next);
   }, []);
 
   /** Selects exactly these tables and brings them into view. */
   const selectTables = useCallback(
     (tables: string[]) => {
-      const wanted = new Set(tables);
-      setNodes((current) =>
-        current.map((n) =>
-          n.selected === wanted.has(n.id) ? n : { ...n, selected: wanted.has(n.id) },
-        ),
-      );
+      useErdStore.getState().setSelection(tables);
       if (tables.length > 0) {
         setTimeout(
           () =>
@@ -215,7 +215,7 @@ function Designer({ schema }: { schema: DatabaseSchema }) {
         );
       }
     },
-    [setNodes, flow],
+    [flow],
   );
 
   if (schema.tables.length === 0) {
@@ -238,8 +238,9 @@ function Designer({ schema }: { schema: DatabaseSchema }) {
       data-fullscreen={fullScreen}
       className={cn('flex flex-col bg-bg', fullScreen ? 'fixed inset-0 z-40' : 'h-full')}
     >
-      {/* One fixed-height row: if the toolbar could wrap, toggling an option would shift the canvas. */}
-      <header className="flex h-11 shrink-0 items-center gap-3 overflow-x-auto border-b border-border bg-surface px-3 [scrollbar-width:none] [&>*]:shrink-0">
+      {/* Two fixed-height rows — actions above, view options below — so nothing wraps,
+          scrolls sideways, or shifts the canvas when an option changes. */}
+      <header className="flex h-10 shrink-0 items-center gap-3 border-b border-border bg-surface px-3">
         <div className="flex items-center gap-2">
           <Network className="size-4 text-accent" />
           <h1 className="text-sm font-semibold">Relationship Designer</h1>
@@ -252,41 +253,11 @@ function Designer({ schema }: { schema: DatabaseSchema }) {
             {inferredCount > 0 && ` · ${formatCount(inferredCount)} inferred`}
           </span>
         </div>
-
-        <div className="ml-auto flex items-center gap-3 [&>*]:shrink-0">
+        <div className="ml-auto flex shrink-0 items-center gap-2">
           <TableSearch
             tables={graph.tables.map((t) => t.name)}
             onPick={(table) => selectTables([table])}
           />
-
-          <div className="flex items-center gap-1.5">
-            <span className="text-2xs text-fg-subtle">Columns</span>
-            <SegmentedControl
-              aria-label="Columns shown in each table"
-              value={detail}
-              onChange={(value) => store().setDetail(value)}
-              options={DETAIL_OPTIONS}
-            />
-          </div>
-
-          <div className="flex items-center gap-1.5">
-            <Label htmlFor="erd-highlight" className="text-2xs font-normal text-fg-subtle">
-              Highlight
-            </Label>
-            <Select
-              id="erd-highlight"
-              value={highlightMode}
-              onChange={(e) => store().setHighlightMode(e.target.value as HighlightMode)}
-              className="w-48"
-            >
-              {(Object.keys(HIGHLIGHT_LABEL) as HighlightMode[]).map((mode) => (
-                <option key={mode} value={mode}>
-                  {HIGHLIGHT_LABEL[mode]}
-                </option>
-              ))}
-            </Select>
-          </div>
-
           <Tooltip
             content={
               selected.length === 0
@@ -306,22 +277,6 @@ function Designer({ schema }: { schema: DatabaseSchema }) {
               </Button>
             </span>
           </Tooltip>
-
-          <ToggleOption
-            id="erd-merge"
-            label="Merge junctions"
-            title="Draw a many-to-many link directly between two tables and hide the junction table between them"
-            checked={mergeJunctions}
-            onChange={(value) => store().setMergeJunctions(value)}
-          />
-          <ToggleOption
-            id="erd-inferred"
-            label="Show inferred"
-            title="Also draw guessed relationships (matching column names with no foreign key). They are dashed and labelled; the database does not enforce them."
-            checked={showInferred}
-            onChange={(value) => store().setShowInferred(value)}
-          />
-
           <div className="flex items-center gap-1">
             <Tooltip content="Arrange tables automatically (discards your manual positions)">
               <Button
@@ -357,6 +312,52 @@ function Designer({ schema }: { schema: DatabaseSchema }) {
           </div>
         </div>
       </header>
+      <div
+        role="toolbar"
+        aria-label="View options"
+        className="flex h-9 shrink-0 items-center gap-5 overflow-hidden border-b border-border bg-surface px-3 [&>*]:shrink-0"
+      >
+        <div className="flex items-center gap-1.5">
+          <span className="text-2xs text-fg-subtle">Columns</span>
+          <SegmentedControl
+            aria-label="Columns shown in each table"
+            value={detail}
+            onChange={(value) => store().setDetail(value)}
+            options={DETAIL_OPTIONS}
+          />
+        </div>
+        <div className="flex items-center gap-1.5">
+          <Label htmlFor="erd-highlight" className="text-2xs font-normal text-fg-subtle">
+            Highlight
+          </Label>
+          <Select
+            id="erd-highlight"
+            value={highlightMode}
+            onChange={(e) => store().setHighlightMode(e.target.value as HighlightMode)}
+            className="w-48"
+          >
+            {(Object.keys(HIGHLIGHT_LABEL) as HighlightMode[]).map((mode) => (
+              <option key={mode} value={mode}>
+                {HIGHLIGHT_LABEL[mode]}
+              </option>
+            ))}
+          </Select>
+        </div>
+        <ToggleOption
+          id="erd-merge"
+          label="Merge junctions"
+          title="Draw a many-to-many link directly between two tables and hide the junction table between them"
+          checked={mergeJunctions}
+          onChange={(value) => store().setMergeJunctions(value)}
+        />
+        <ToggleOption
+          id="erd-inferred"
+          label="Show inferred"
+          title="Also draw guessed relationships (matching column names with no foreign key). They are dashed and labelled; the database does not enforce them."
+          checked={showInferred}
+          onChange={(value) => store().setShowInferred(value)}
+        />
+      </div>
 
       <div className="flex min-h-0 flex-1">
         <div className="min-w-0 flex-1" aria-label="Relationship diagram">
@@ -366,7 +367,10 @@ function Designer({ schema }: { schema: DatabaseSchema }) {
             nodeTypes={nodeTypes}
             edgeTypes={edgeTypes}
             onNodesChange={onNodesChange}
-            onSelectionChange={onSelectionChange}
+            onNodeClick={(event, clicked) =>
+              toggleSelection(clicked.id, event.metaKey || event.ctrlKey || event.shiftKey)
+            }
+            onPaneClick={() => store().setSelection([])}
             onNodeDragStop={(_event, _node, dragged) =>
               store().savePositions(
                 contextKey,
@@ -378,11 +382,9 @@ function Designer({ schema }: { schema: DatabaseSchema }) {
             maxZoom={2}
             nodesConnectable={false}
             deleteKeyCode={null}
-            multiSelectionKeyCode={['Meta', 'Control']}
-            selectionKeyCode="Shift"
+            selectionKeyCode={null}
             selectNodesOnDrag={false}
             edgesFocusable={false}
-            elevateNodesOnSelect
             onlyRenderVisibleElements={graph.tables.length > VIRTUALIZE_ABOVE}
           >
             <Background gap={1.25 * rem} size={1} color="var(--border-strong)" />
@@ -488,7 +490,7 @@ function Legend({ showInferred }: { showInferred: boolean }) {
         </div>
       )}
       <p className="text-fg-subtle">
-        Click a table · {modKeyLabel}-click to add · Shift-drag to box-select · scroll to zoom
+        Click a table · {modKeyLabel}- or Shift-click to add more · drag to move · scroll to zoom
       </p>
     </div>
   );

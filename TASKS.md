@@ -51,7 +51,8 @@ Source of truth for requirements: [`PROMPT.md`](./PROMPT.md). Legend: `[x]` done
 - [x] Changing an option (merge junctions, inferred, hide unrelated, highlight, detail) never moves tables or the viewport; only a new database or Auto layout re-arranges
 - [x] Minimap removed at the owner's request
 - [x] Expand/collapse per table; global detail level (All / Keys / Names), compact by default for large schemas
-- [x] Select one or many (click, ⌘/Ctrl-click, Shift-drag box)
+- [x] Select one or many (click, ⌘/Ctrl/Shift-click); moving a table never changes the selection; clicking empty canvas clears it
+- [x] Toolbar in two fixed rows (actions, view options) with no sideways scrolling
 - [x] Highlight direct parents and children, all ancestors, all descendants, or everything connected
 - [x] Hide unrelated (focus on a selection); search for a table and jump to it
 - [x] Details panel: parents, children, columns involved, constraint names, delete rules; click to navigate

@@ -229,6 +229,47 @@ test.describe('relationship designer', () => {
     await unchanged();
   });
 
+  test('moving a table keeps the selection', async ({ page }) => {
+    await openDesigner(page);
+    await node(page, 'Orders').click();
+    await node(page, 'ContactDetails').click({ modifiers: [modifier] });
+    const drag = async (table: string) => {
+      const box = (await node(page, table).boundingBox())!;
+      await page.mouse.move(box.x + 30, box.y + 10);
+      await page.mouse.down();
+      await page.mouse.move(box.x + 90, box.y - 70, { steps: 6 });
+      await page.mouse.up();
+      const moved = (await node(page, table).boundingBox())!;
+      expect(Math.abs(moved.x - box.x)).toBeGreaterThan(20);
+    };
+    const stillSelected = async () => {
+      await expect(node(page, 'Orders')).toHaveAttribute('data-role', 'selected');
+      await expect(node(page, 'ContactDetails')).toHaveAttribute('data-role', 'selected');
+      await expect(page.getByRole('heading', { name: '2 tables selected' })).toBeVisible();
+    };
+
+    await drag('AuditLog'); // a table outside the selection
+    await stillSelected();
+    await drag('OrderItems'); // a highlighted neighbour
+    await stillSelected();
+    await drag('Orders'); // a selected table
+    await stillSelected();
+
+    // The toolbar fits without sideways scrolling.
+    const overflow = await page.evaluate(() =>
+      [
+        ...document.querySelectorAll(
+          '[data-fullscreen] > header, [data-fullscreen] > [role="toolbar"]',
+        ),
+      ].map((el) => el.scrollWidth - el.clientWidth),
+    );
+    expect(overflow).toEqual([0, 0]);
+
+    // Clicking empty canvas clears the selection.
+    await page.locator('.react-flow__pane').click({ position: { x: 600, y: 30 } });
+    await expect(node(page, 'Orders')).toHaveAttribute('data-role', 'none');
+  });
+
   test('has no minimap and can go full screen', async ({ page }) => {
     await openDesigner(page);
     await expect(page.locator('.react-flow__minimap')).toHaveCount(0);
@@ -265,13 +306,13 @@ test.describe('relationship designer', () => {
     await panel.getByRole('button', { name: 'Add 3 tables to query' }).click();
     await expect(page.getByRole('heading', { level: 1, name: 'Query Builder' })).toBeVisible();
     const sql = page.getByLabel('SQL statement');
-    // Ordered so each table joins one already in the query, on its (composite) foreign key.
-    await expect(sql).toContainText('FROM `jarvis_demo`.`ContactDetails`');
+    // In click order, each table joining one already in the query on its (composite) foreign key.
+    await expect(sql).toContainText('FROM `jarvis_demo`.`OrderItems`');
     await expect(sql).toContainText(
-      'INNER JOIN `jarvis_demo`.`Orders` ON `ContactDetails`.`contact_id` = `Orders`.`contact_id`',
+      'INNER JOIN `jarvis_demo`.`Orders` ON `OrderItems`.`order_id` = `Orders`.`order_id` AND `OrderItems`.`region_code` = `Orders`.`region_code`',
     );
     await expect(sql).toContainText(
-      'INNER JOIN `jarvis_demo`.`OrderItems` ON `Orders`.`order_id` = `OrderItems`.`order_id` AND `Orders`.`region_code` = `OrderItems`.`region_code`',
+      'INNER JOIN `jarvis_demo`.`ContactDetails` ON `Orders`.`contact_id` = `ContactDetails`.`contact_id`',
     );
   });
 });
