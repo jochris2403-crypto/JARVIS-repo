@@ -53,7 +53,9 @@ class HealthMonitor {
     if (status !== this.previous) {
       if (status === 'offline') {
         notify('error', 'JARVIS server unreachable', {
-          description: 'Start it with `npm run dev`. Retrying automatically.',
+          description: import.meta.env.DEV
+            ? 'Start it with `npm run dev`. Retrying automatically.'
+            : 'Retrying automatically.',
         });
       } else if (this.previous === 'offline') {
         notify('success', 'Reconnected to the JARVIS server');

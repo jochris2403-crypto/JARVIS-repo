@@ -4,7 +4,9 @@ import path from 'node:path';
 import type { Express } from 'express';
 import { createApp } from '../app.js';
 import { createServices, type Services } from '../container.js';
+import type { AuthConfig } from '../config/env.js';
 import { silentLogger } from '../lib/logger.js';
+import { SessionAuth } from '../security/session-auth.js';
 
 export interface TestApp {
   app: Express;
@@ -21,6 +23,9 @@ export function createTestApp(
     startedAt?: number;
     allowedOrigins?: string[];
     queryTimeoutMs?: number;
+    publicOrigins?: string[];
+    /** Enables the login requirement. */
+    auth?: AuthConfig;
   } = {},
 ): TestApp {
   const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'jarvis-test-'));
@@ -30,7 +35,17 @@ export function createTestApp(
     queryTimeoutMs: options.queryTimeoutMs,
   });
   const app = createApp({
-    config: { env: 'test', allowedOrigins: options.allowedOrigins ?? ['http://localhost:5173'] },
+    config: {
+      env: 'test',
+      allowedOrigins: [
+        ...(options.allowedOrigins ?? ['http://localhost:5173']),
+        ...(options.publicOrigins ?? []),
+      ],
+      publicOrigins: options.publicOrigins,
+    },
+    auth: options.auth
+      ? new SessionAuth(options.auth, services.masterKey, options.publicOrigins)
+      : undefined,
     logger: silentLogger,
     version: options.version ?? '0.0.0-test',
     startedAt: options.startedAt,

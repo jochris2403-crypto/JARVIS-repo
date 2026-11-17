@@ -51,7 +51,7 @@ describe('error handling', () => {
 
 describe('local-only guard', () => {
   it('rejects requests addressed to a non-loopback host (DNS rebinding)', async () => {
-    const res = await request(makeApp()).get('/api/health').set('Host', 'evil.example:4310');
+    const res = await request(makeApp()).get('/api/auth/session').set('Host', 'evil.example:4310');
     expect(res.status).toBe(403);
     expect(res.body.error.code).toBe('FORBIDDEN');
   });

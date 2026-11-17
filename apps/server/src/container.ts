@@ -10,6 +10,8 @@ export interface Services {
   connectionService: ConnectionService;
   connectionManager: ConnectionManager;
   queryService: QueryService;
+  /** The 32-byte server key; also the root of the session-signing key. */
+  masterKey: Buffer;
 }
 
 /** Builds the service graph. The one place where concrete classes are wired together. */
@@ -19,7 +21,8 @@ export function createServices(options: {
   logger: Logger;
   queryTimeoutMs?: number;
 }): Services {
-  const secretBox = new SecretBox(loadOrCreateKey(options.dataDir, options.secretKey));
+  const masterKey = loadOrCreateKey(options.dataDir, options.secretKey);
+  const secretBox = new SecretBox(masterKey);
   const store = new ConnectionStore(options.dataDir, secretBox);
   const connectionManager = new ConnectionManager(options.logger);
   const connectionService = new ConnectionService(store, connectionManager);
@@ -29,6 +32,7 @@ export function createServices(options: {
     options.queryTimeoutMs ?? DEFAULT_QUERY_TIMEOUT_MS,
   );
   return {
+    masterKey,
     connectionManager,
     connectionService,
     queryService: new QueryService(connectionService, executor),

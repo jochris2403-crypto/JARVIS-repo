@@ -1,5 +1,6 @@
 import {
   Command,
+  LogOut,
   Monitor,
   Moon,
   PanelLeft,
@@ -25,6 +26,7 @@ import {
 import { Kbd } from '@/components/ui/kbd';
 import { Tooltip } from '@/components/ui/tooltip';
 import { modKeyLabel } from '@/lib/utils';
+import { useAuthStore } from '@/stores/auth-store';
 import { UI_SCALES, useUiStore, type ThemePreference, type UiScale } from '@/stores/ui-store';
 import { ConnectionSwitcher, DatabaseSwitcher } from '@/features/connections/connection-switcher';
 import { NotificationCenter } from './notification-center';
@@ -77,6 +79,9 @@ function SettingsMenu() {
   const uiScale = useUiStore((s) => s.uiScale);
   const setUiScale = useUiStore((s) => s.setUiScale);
   const openPalette = useUiStore((s) => s.setCommandPaletteOpen);
+  const authRequired = useAuthStore((s) => s.authRequired);
+  const username = useAuthStore((s) => s.username);
+  const signOut = useAuthStore((s) => s.signOut);
 
   return (
     <DropdownMenu>
@@ -129,6 +134,15 @@ function SettingsMenu() {
           <Settings /> Settings
           <DropdownMenuShortcut>{modKeyLabel} ,</DropdownMenuShortcut>
         </DropdownMenuItem>
+        {authRequired && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={() => void signOut()}>
+              <LogOut /> Sign out
+              {username && <span className="ml-auto truncate text-fg-subtle">{username}</span>}
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

@@ -1,0 +1,30 @@
+# Render Blueprint: New → Blueprint → pick this repository.
+# Persistent disks need a paid instance type (Starter or above).
+services:
+  - type: web
+    name: jarvis
+    runtime: docker
+    plan: starter
+    healthCheckPath: /api/health
+    disk:
+      name: jarvis-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: JARVIS_AUTH_USERNAME
+        value: admin
+      # You are asked for this when the Blueprint is created. Minimum 8 characters.
+      - key: JARVIS_AUTH_PASSWORD
+        sync: false
+      # 32-byte key that encrypts stored connection passwords. Generate one with
+      #   openssl rand -base64 32
+      # and keep it stable. (Without it, a key file is created on the /data disk.)
+      - key: JARVIS_SECRET_KEY
+        sync: false
+      # Render terminates TLS in front of the container.
+      - key: JARVIS_TRUST_PROXY
+        value: '1'
+      # The onrender.com URL is detected automatically (RENDER_EXTERNAL_URL). Add a custom
+      # domain here if you attach one, e.g. https://jarvis.example.com
+      # - key: JARVIS_PUBLIC_ORIGIN
+      #   value: https://jarvis.example.com

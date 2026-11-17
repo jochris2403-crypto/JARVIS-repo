@@ -4,7 +4,6 @@ import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { useGlobalShortcuts } from '@/hooks/use-global-shortcuts';
 import { useHealthMonitor } from '@/hooks/use-health-monitor';
-import { useApplyAppearance } from '@/hooks/use-theme';
 import { ConnectionDialog } from '@/features/connections/connection-dialog';
 import { useConnectionStore } from '@/stores/connection-store';
 import { useSystemStore } from '@/stores/system-store';
@@ -43,7 +42,6 @@ function useSyncConnections() {
 
 /** The application frame: sidebar, top bar, workspace tabs, routed content, status bar. */
 export function AppShell() {
-  useApplyAppearance();
   useHealthMonitor();
   useGlobalShortcuts();
   useAutoCollapseSidebar();

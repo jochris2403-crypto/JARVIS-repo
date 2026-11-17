@@ -37,6 +37,17 @@ export interface RequestOptions<TSchema extends z.ZodType> {
 
 const DEFAULT_TIMEOUT_MS = 30_000;
 
+let onUnauthorized: (() => void) | undefined;
+
+/**
+ * Registers what happens when the server says the session is missing or expired
+ * (the auth store switches back to the sign-in screen). Kept as a hook so the
+ * client does not import the store.
+ */
+export function setUnauthorizedHandler(handler: (() => void) | undefined): void {
+  onUnauthorized = handler;
+}
+
 /**
  * Typed fetch wrapper for the JARVIS API.
  * - Validates successful responses against a Zod schema.
@@ -73,6 +84,8 @@ export async function apiRequest<TSchema extends z.ZodType>(
     const parsed = apiErrorBodySchema.safeParse(payload);
     if (parsed.success) {
       const { code, message, details, requestId } = parsed.data.error;
+      // A failed sign-in also answers 401; only an expired session should sign the user out.
+      if (code === 'UNAUTHORIZED' && !path.startsWith('/auth/')) onUnauthorized?.();
       throw new ApiClientError(code, message, { status: response.status, details, requestId });
     }
     // A non-JSON error usually means the dev proxy could not reach the API.

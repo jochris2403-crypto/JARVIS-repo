@@ -130,7 +130,8 @@ Builder UI ──QuerySpec──▶ compile endpoint ──▶ compiler ──�
 ### Implemented
 
 - API binds to `127.0.0.1` by default.
-- **Local-only guard** (`middleware/local-only.ts`): rejects requests whose `Host` is not loopback (DNS-rebinding defence) and requests whose `Origin` is not the configured web origin (CSRF defence for a cookieless local API).
+- **Host/Origin guard** (`middleware/local-only.ts`): rejects requests whose `Host` is neither loopback nor a configured public origin (`JARVIS_PUBLIC_ORIGIN`, or the URL a hosting platform injects) — the DNS-rebinding defence — and requests whose `Origin` is not an allowed origin (CSRF defence). `GET /api/health` skips the Host check so platform probes work.
+- **Sign-in (single account)** (`security/session-auth.ts`, `routes/auth.routes.ts`): enabled by `JARVIS_AUTH_PASSWORD`, and mandatory when binding to a non-loopback interface or setting a public origin (startup fails otherwise). Credentials are compared in constant time over SHA-256 digests. Sessions are stateless HMAC-SHA256-signed cookies (`HttpOnly`, `SameSite=Strict`, `Secure` when served over https) with an expiry (`JARVIS_SESSION_TTL_HOURS`, default 12). The signing key is derived from the server key plus the credentials, so changing the password signs everyone out. Failed logins are throttled per client IP (10 per 15 minutes; `JARVIS_TRUST_PROXY` makes the IP correct behind a proxy). Everything under `/api` except `/health` and `/auth/*` requires a session; the static web app is public so the sign-in screen can load.
 - `helmet` security headers; `x-powered-by` disabled; 2 MB JSON body limit.
 - Environment validated at startup; sanitized error responses; redacting logger.
 - **Credentials.** A password is sent once over the loopback API, encrypted with AES-256-GCM (random 96-bit IV, connection id bound as additional authenticated data so ciphertext cannot be moved between records), and written to `connections.json` (0600, atomic rename) in the data directory (0700). It is decrypted only inside `ConnectionService` to hand to the driver. No API response contains it; tests assert this at the HTTP, file and browser-storage level.
@@ -152,9 +153,9 @@ Builder UI ──QuerySpec──▶ compile endpoint ──▶ compiler ──�
 - **Destructive operations:** two-step preview → confirm with a server-issued token; affected-row counts shown before execution.
 - **Read-only mode:** the per-connection flag is stored and shown today; server-side enforcement lands with the first write operation (Phase 7). It is a safety net, not a privilege system — the MySQL account's grants remain the real boundary.
 
-### Required before multi-user or network exposure
+### Required before multi-user use
 
-User authentication and sessions, per-user authorization over connections, TLS for the web app and API, a managed secret store (KMS/keychain), CSRF tokens once cookies exist, rate limiting, audit logging, and per-user isolation of saved connections, queries and history. None of this exists today.
+Multiple user accounts and per-user authorization over connections (today one shared account sees everything), TLS when not behind an https proxy, a managed secret store (KMS/keychain), audit logging, and per-user isolation of saved connections, queries and history. None of this exists today.
 
 ## 10. Testing strategy
 

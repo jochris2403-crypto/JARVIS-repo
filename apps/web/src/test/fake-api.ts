@@ -125,6 +125,8 @@ export interface FakeApi {
   queryResult: Omit<QueryResult, 'sql' | 'displaySql' | 'limit' | 'offset'>;
   /** When set, `query/execute` fails with this error instead. */
   queryError: { status: number; code: string; message: string } | null;
+  /** Login state. `required: false` mirrors a server running without a password. */
+  auth: { required: boolean; signedIn: boolean; username: string; password: string };
 }
 
 /** A recognisable stand-in for server-side compilation: enough to tell queries apart. */
@@ -138,7 +140,9 @@ function describeSpec(spec: QuerySpec): string {
  * to the real contract (shapes, status codes, password never returned).
  */
 export function installFakeApi(
-  initial: Partial<Pick<FakeApi, 'profiles' | 'online'>> = {},
+  initial: Partial<Pick<FakeApi, 'profiles' | 'online'>> & {
+    auth?: Partial<FakeApi['auth']>;
+  } = {},
 ): FakeApi {
   const state: FakeApi = {
     requests: [],
@@ -158,6 +162,13 @@ export function installFakeApi(
       durationMs: 12,
     },
     queryError: null,
+    auth: {
+      required: false,
+      signedIn: false,
+      username: 'admin',
+      password: 'correct horse',
+      ...initial.auth,
+    },
   };
   const passwords = new Map<string, string>();
   let nextId = 1;
@@ -191,6 +202,28 @@ export function installFakeApi(
     state.requests.push({ method, path, body });
 
     if (path === '/health') return json(HEALTH);
+
+    const { auth } = state;
+    const session = () =>
+      auth.required
+        ? {
+            authRequired: true,
+            authenticated: auth.signedIn,
+            username: auth.signedIn ? auth.username : null,
+          }
+        : { authRequired: false, authenticated: true, username: null };
+    if (path === '/auth/session') return json(session());
+    if (path === '/auth/login' && method === 'POST') {
+      if (auth.required && (body?.username !== auth.username || body?.password !== auth.password))
+        return fail(401, 'UNAUTHORIZED', 'Incorrect username or password');
+      auth.signedIn = true;
+      return json(session());
+    }
+    if (path === '/auth/logout' && method === 'POST') {
+      auth.signedIn = false;
+      return new Response(null, { status: 204 });
+    }
+    if (auth.required && !auth.signedIn) return fail(401, 'UNAUTHORIZED', 'Sign in to continue');
     if (/^\/query-executions\/[^/]+\/cancel$/.test(path)) return json({ cancelled: true });
     if (path === '/connections' && method === 'GET') return json({ connections: state.profiles });
 

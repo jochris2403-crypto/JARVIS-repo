@@ -2,6 +2,8 @@ import type { ApiErrorCode } from '@jarvis/shared';
 
 const STATUS_BY_CODE: Record<ApiErrorCode, number> = {
   BAD_REQUEST: 400,
+  UNAUTHORIZED: 401,
+  TOO_MANY_REQUESTS: 429,
   VALIDATION_FAILED: 422,
   NOT_FOUND: 404,
   CONFLICT: 409,

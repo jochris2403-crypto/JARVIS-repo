@@ -1,6 +1,12 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
-import { afterEach, vi } from 'vitest';
+import { afterEach, beforeEach, vi } from 'vitest';
+import { useAuthStore } from '@/stores/auth-store';
+
+// Most tests exercise the signed-in app; auth tests reset this themselves.
+beforeEach(() => {
+  useAuthStore.setState({ status: 'signed-in', authRequired: false, username: null, error: null });
+});
 
 afterEach(() => {
   cleanup();

@@ -1,6 +1,7 @@
 import { WORKSPACES } from '@jarvis/shared';
 import { Navigate, Route, Routes } from 'react-router';
 import { AppShell } from '@/components/layout/app-shell';
+import { AuthGate } from '@/features/auth/auth-gate';
 import { NotFoundPage } from '@/pages/not-found-page';
 import { SettingsPage } from '@/pages/settings-page';
 import { WorkspacePage } from '@/pages/workspace-page';
@@ -10,13 +11,15 @@ import { DEFAULT_WORKSPACE, SETTINGS_PATH, workspacePath } from './paths';
 export function AppRoutes() {
   return (
     <Routes>
-      <Route element={<AppShell />}>
-        <Route index element={<Navigate to={workspacePath(DEFAULT_WORKSPACE)} replace />} />
-        {WORKSPACES.map(({ id }) => (
-          <Route key={id} path={workspacePath(id)} element={<WorkspacePage id={id} />} />
-        ))}
-        <Route path={SETTINGS_PATH} element={<SettingsPage />} />
-        <Route path="*" element={<NotFoundPage />} />
+      <Route element={<AuthGate />}>
+        <Route element={<AppShell />}>
+          <Route index element={<Navigate to={workspacePath(DEFAULT_WORKSPACE)} replace />} />
+          {WORKSPACES.map(({ id }) => (
+            <Route key={id} path={workspacePath(id)} element={<WorkspacePage id={id} />} />
+          ))}
+          <Route path={SETTINGS_PATH} element={<SettingsPage />} />
+          <Route path="*" element={<NotFoundPage />} />
+        </Route>
       </Route>
     </Routes>
   );

@@ -4,6 +4,7 @@ import { createApp } from './app.js';
 import { loadConfig } from './config/env.js';
 import { createServices } from './container.js';
 import { createLogger } from './lib/logger.js';
+import { SessionAuth } from './security/session-auth.js';
 import { SERVER_VERSION } from './version.js';
 
 const config = loadConfig();
@@ -19,12 +20,17 @@ const services = createServices({
   logger,
 });
 
+const auth = config.auth
+  ? new SessionAuth(config.auth, services.masterKey, config.publicOrigins)
+  : undefined;
+
 const app = createApp({
   config,
   logger,
   connectionService: services.connectionService,
   queryService: services.queryService,
   version: SERVER_VERSION,
+  auth,
   staticDir: config.env === 'production' ? staticDir : undefined,
 });
 
@@ -38,6 +44,8 @@ const server = app.listen(config.port, config.host, (error?: Error) => {
     url: `http://${config.host}:${config.port}`,
     env: config.env,
     dataDir: config.dataDir,
+    auth: auth ? `enabled (user "${auth.username}")` : 'disabled (local use only)',
+    publicOrigins: config.publicOrigins,
   });
 });
 

@@ -24,6 +24,8 @@ test.describe('application shell', () => {
 
   test('command palette switches theme and the choice persists', async ({ page }) => {
     await page.goto('/');
+    // The shell (which owns keyboard shortcuts) mounts once the session check completes.
+    await expect(page.getByRole('heading', { level: 1, name: 'Overview' })).toBeVisible();
     await page.keyboard.press('ControlOrMeta+k');
     await page.getByPlaceholder('Search workspaces and commands…').fill('theme light');
     await page.keyboard.press('Enter');

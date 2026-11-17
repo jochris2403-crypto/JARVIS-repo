@@ -53,10 +53,11 @@ docs             API reference and progress log
 
 - [ARCHITECTURE.md](./ARCHITECTURE.md) — system design, security model, design system
 - [DEVELOPMENT.md](./DEVELOPMENT.md) — workflow, conventions, testing
+- [DEPLOYMENT.md](./DEPLOYMENT.md) — hosting JARVIS for access from other machines
 - [docs/API.md](./docs/API.md) — HTTP API reference
 - [docs/PROGRESS.md](./docs/PROGRESS.md) — development log
 - [TASKS.md](./TASKS.md) — checklist, known issues, technical decisions
 
 ## Security notice
 
-JARVIS currently has **no user authentication** and is designed to run on your own machine, bound to `127.0.0.1`. Do not expose it to a network. Connection passwords are encrypted at rest in `~/.jarvis`, with the limitations described in the architecture document. See the security section of [ARCHITECTURE.md](./ARCHITECTURE.md) for what is required before multi-user or internet deployment.
+By default JARVIS runs on your own machine, bound to `127.0.0.1`, with no login. To open it from other machines, set `JARVIS_AUTH_PASSWORD`: this turns on a sign-in screen, and JARVIS refuses to listen on a network interface without it. It is a single shared account, not multi-user access control. See [DEPLOYMENT.md](./DEPLOYMENT.md). Connection passwords are encrypted at rest in `~/.jarvis`, with the limitations described in the architecture document. See the security section of [ARCHITECTURE.md](./ARCHITECTURE.md) for what is required before multi-user or internet deployment.
