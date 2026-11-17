@@ -6,17 +6,17 @@ JARVIS runs as **one Node.js process** that serves both the API and the built we
 
 ## What every deployment needs
 
-| Variable                   | Required                  | Purpose                                                                                                                                                                            |
-| -------------------------- | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `JARVIS_AUTH_PASSWORD`     | **yes**                   | Turns on the sign-in screen (min. 8 characters). JARVIS refuses to start on a network interface without it.                                                                        |
-| `JARVIS_AUTH_USERNAME`     | no (default `admin`)      | Sign-in username.                                                                                                                                                                  |
-| `JARVIS_HOST`              | yes                       | `0.0.0.0` to accept connections from other machines (the Docker image sets this).                                                                                                  |
-| `JARVIS_PUBLIC_ORIGIN`     | yes, unless auto-detected | The URL(s) people type, comma-separated, e.g. `http://192.168.1.20:4310`. Requests addressed to other hosts are rejected. Render, Railway and Fly URLs are detected automatically. |
-| `JARVIS_DATA_DIR`          | yes on a host             | Where saved connections live. Must be on a **persistent** disk/volume (the Docker image uses `/data`).                                                                             |
-| `JARVIS_SECRET_KEY`        | strongly recommended      | 32-byte key encrypting stored passwords: `openssl rand -base64 32`. If unset, a key file is created in the data dir. Never change it afterwards.                                   |
-| `JARVIS_TRUST_PROXY`       | behind a proxy            | `1` on Render, Railway, Fly or behind nginx/Caddy, so client IPs and https are detected correctly. Leave unset otherwise.                                                          |
-| `JARVIS_SESSION_TTL_HOURS` | no (default 12)           | How long a sign-in lasts.                                                                                                                                                          |
-| `PORT` / `JARVIS_PORT`     | no (default 4310)         | Listening port. Platforms set `PORT` themselves.                                                                                                                                   |
+| Variable                   | Required                  | Purpose                                                                                                                                                                    |
+| -------------------------- | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `JARVIS_AUTH_PASSWORD`     | **yes**                   | Turns on the sign-in screen (min. 8 characters). JARVIS refuses to start on a network interface without it.                                                                |
+| `JARVIS_AUTH_USERNAME`     | no (default `admin`)      | Sign-in username.                                                                                                                                                          |
+| `JARVIS_HOST`              | yes                       | `0.0.0.0` to accept connections from other machines (the Docker image sets this).                                                                                          |
+| `JARVIS_PUBLIC_ORIGIN`     | yes, unless auto-detected | The URL(s) people type, comma-separated, e.g. `http://192.168.1.20:4310`. Requests addressed to other hosts are rejected. Railway and Fly URLs are detected automatically. |
+| `JARVIS_DATA_DIR`          | yes on a host             | Where saved connections live. Must be on a **persistent** disk/volume (the Docker image uses `/data`).                                                                     |
+| `JARVIS_SECRET_KEY`        | strongly recommended      | 32-byte key encrypting stored passwords: `openssl rand -base64 32`. If unset, a key file is created in the data dir. Never change it afterwards.                           |
+| `JARVIS_TRUST_PROXY`       | behind a proxy            | `1` on Railway, Fly or behind nginx/Caddy, so client IPs and https are detected correctly. Leave unset otherwise.                                                          |
+| `JARVIS_SESSION_TTL_HOURS` | no (default 12)           | How long a sign-in lasts.                                                                                                                                                  |
+| `PORT` / `JARVIS_PORT`     | no (default 4310)         | Listening port. Platforms set `PORT` themselves.                                                                                                                           |
 
 **The MySQL server must be reachable from wherever JARVIS runs.** A cloud host cannot reach a database on your laptop or office network (for example the dev instance on port 3307). Use a database that is reachable from the internet, or run JARVIS inside the same network as the database.
 
@@ -42,23 +42,14 @@ Then open `http://192.168.1.20:4310` from the other machine and sign in as `admi
 
 On macOS, allow incoming connections for `node` if the firewall asks. Traffic is plain http on the LAN, so use this only on a network you trust.
 
-## Option 2 — Render (managed, https, recommended for internet access)
-
-1. Push this repository to GitHub/GitLab.
-2. In Render: **New → Blueprint**, pick the repository. Render reads `render.yaml`: a Docker web service on the **free** plan with a health check.
-3. Enter `JARVIS_AUTH_PASSWORD` and `JARVIS_SECRET_KEY` (`openssl rand -base64 32`) when prompted.
-4. Open the `https://<name>.onrender.com` URL and sign in.
-
-On the free plan the service sleeps after about 15 idle minutes (the next visit takes about a minute to wake it) and has no persistent disk, so saved connections are lost on every restart, redeploy or sleep. To keep them, switch to a paid plan (Starter) and add the disk shown in the comment at the top of `render.yaml`.
-
-## Option 3 — Railway
+## Option 2 — Railway
 
 1. **New Project → Deploy from GitHub repo.** Railway builds the `Dockerfile`.
 2. Add a **Volume** mounted at `/data`.
 3. Variables: `JARVIS_AUTH_PASSWORD`, `JARVIS_SECRET_KEY` (`openssl rand -base64 32`), `JARVIS_TRUST_PROXY=1`.
 4. **Settings → Networking → Generate Domain.** The domain is detected automatically through `RAILWAY_PUBLIC_DOMAIN`.
 
-## Option 4 — Fly.io
+## Option 3 — Fly.io
 
 ```bash
 fly launch --no-deploy            # detects the Dockerfile; set internal port 4310
@@ -70,7 +61,7 @@ fly deploy
 
 `https://<app>.fly.dev` is detected automatically through `FLY_APP_NAME`.
 
-## Option 5 — Any server with Docker (VPS, office server)
+## Option 4 — Any server with Docker (VPS, office server)
 
 ```bash
 docker build -t jarvis .

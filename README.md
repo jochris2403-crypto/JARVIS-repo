@@ -28,16 +28,17 @@ Configuration is optional; copy `.env.example` to `.env` to change ports or the 
 
 ## Scripts
 
-| Command                                    | What it does                                                                       |
-| ------------------------------------------ | ---------------------------------------------------------------------------------- |
-| `npm run dev`                              | Starts the API (tsx watch) and web app (Vite) together                             |
-| `npm run build`                            | Builds shared → server → web for production                                        |
-| `npm start`                                | Runs the built server; with `NODE_ENV=production` it also serves the built web app |
-| `npm run verify`                           | Typecheck + lint + format check + unit/integration tests                           |
-| `npm test`                                 | Vitest across all workspaces                                                       |
-| `npm run test:e2e`                         | Playwright end-to-end tests (first run: `npx playwright install chromium`)         |
-| `npm run db:init` / `db:start` / `db:stop` | Project-local MySQL dev instance on port 3307                                      |
-| `npm run lint` / `npm run format`          | ESLint / Prettier                                                                  |
+| Command                                    | What it does                                                                                                             |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------ |
+| `npm run dev`                              | Starts the API (tsx watch) and web app (Vite) together                                                                   |
+| `npm run build`                            | Builds shared → server → web for production                                                                              |
+| `npm start`                                | Runs the built server; with `NODE_ENV=production` it also serves the built web app                                       |
+| `npm run package:portable`                 | Builds `dist-portable/JARVIS-<version>-portable.zip`: runs on macOS (Apple Silicon) and Linux x64 with nothing installed |
+| `npm run verify`                           | Typecheck + lint + format check + unit/integration tests                                                                 |
+| `npm test`                                 | Vitest across all workspaces                                                                                             |
+| `npm run test:e2e`                         | Playwright end-to-end tests (first run: `npx playwright install chromium`)                                               |
+| `npm run db:init` / `db:start` / `db:stop` | Project-local MySQL dev instance on port 3307                                                                            |
+| `npm run lint` / `npm run format`          | ESLint / Prettier                                                                                                        |
 
 ## Repository layout
 

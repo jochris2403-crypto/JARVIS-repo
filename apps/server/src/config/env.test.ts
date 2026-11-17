@@ -60,9 +60,6 @@ describe('loadConfig — network exposure', () => {
   it('picks up the public URL injected by hosting platforms', () => {
     const base = { JARVIS_HOST: '0.0.0.0', JARVIS_AUTH_PASSWORD: 'correct horse' };
     expect(
-      loadConfig({ ...base, RENDER_EXTERNAL_URL: 'https://jarvis.onrender.com' }).publicOrigins,
-    ).toEqual(['https://jarvis.onrender.com']);
-    expect(
       loadConfig({ ...base, RAILWAY_PUBLIC_DOMAIN: 'jarvis.up.railway.app' }).publicOrigins,
     ).toEqual(['https://jarvis.up.railway.app']);
     expect(loadConfig({ ...base, FLY_APP_NAME: 'jarvis' }).publicOrigins).toEqual([

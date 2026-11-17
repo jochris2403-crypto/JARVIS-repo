@@ -9,7 +9,7 @@ const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   JARVIS_HOST: z.string().min(1).default('127.0.0.1'),
   JARVIS_PORT: z.coerce.number().int().min(1).max(65535).optional(),
-  /** Hosting platforms (Render, Railway, Fly, Heroku…) inject the port to listen on as PORT. */
+  /** Hosting platforms (Railway, Fly, Heroku…) inject the port to listen on as PORT. */
   PORT: z.coerce.number().int().min(1).max(65535).optional(),
   JARVIS_WEB_ORIGIN: z.string().url().default('http://localhost:5173'),
   JARVIS_DATA_DIR: z.string().min(1).optional(),
@@ -19,7 +19,6 @@ const envSchema = z.object({
   /** Comma-separated URL(s) people use to open JARVIS from other machines. */
   JARVIS_PUBLIC_ORIGIN: z.string().optional(),
   // Public URLs injected by hosting platforms; added to the public origins automatically.
-  RENDER_EXTERNAL_URL: z.string().optional(),
   RAILWAY_PUBLIC_DOMAIN: z.string().optional(),
   FLY_APP_NAME: z.string().optional(),
   JARVIS_AUTH_USERNAME: z.string().min(1).default('admin'),
@@ -30,7 +29,7 @@ const envSchema = z.object({
     .min(0.1)
     .max(24 * 30)
     .default(12),
-  /** Number of reverse proxies in front of JARVIS (1 on Render/Railway/Fly), or 0/false. */
+  /** Number of reverse proxies in front of JARVIS (1 on Railway/Fly), or 0/false. */
   JARVIS_TRUST_PROXY: z
     .string()
     .optional()
@@ -107,7 +106,6 @@ export function loadConfig(source: NodeJS.ProcessEnv = process.env): ServerConfi
   const problems: string[] = [];
   const publicOrigins: string[] = [];
   const platformOrigins = [
-    env.RENDER_EXTERNAL_URL,
     env.RAILWAY_PUBLIC_DOMAIN && `https://${env.RAILWAY_PUBLIC_DOMAIN}`,
     env.FLY_APP_NAME && `https://${env.FLY_APP_NAME}.fly.dev`,
   ].filter((origin): origin is string => Boolean(origin));
