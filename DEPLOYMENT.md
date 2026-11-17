@@ -45,11 +45,11 @@ On macOS, allow incoming connections for `node` if the firewall asks. Traffic is
 ## Option 2 — Render (managed, https, recommended for internet access)
 
 1. Push this repository to GitHub/GitLab.
-2. In Render: **New → Blueprint**, pick the repository. Render reads `render.yaml`: a Docker web service with a 1 GB disk at `/data` and a health check.
+2. In Render: **New → Blueprint**, pick the repository. Render reads `render.yaml`: a Docker web service on the **free** plan with a health check.
 3. Enter `JARVIS_AUTH_PASSWORD` and `JARVIS_SECRET_KEY` (`openssl rand -base64 32`) when prompted.
 4. Open the `https://<name>.onrender.com` URL and sign in.
 
-Persistent disks need a paid instance type (Starter). On the free type, saved connections are lost on every deploy or restart.
+On the free plan the service sleeps after about 15 idle minutes (the next visit takes about a minute to wake it) and has no persistent disk, so saved connections are lost on every restart, redeploy or sleep. To keep them, switch to a paid plan (Starter) and add the disk shown in the comment at the top of `render.yaml`.
 
 ## Option 3 — Railway
 

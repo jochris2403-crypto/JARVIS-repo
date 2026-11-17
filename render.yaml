@@ -1,15 +1,18 @@
 # Render Blueprint: New → Blueprint → pick this repository.
-# Persistent disks need a paid instance type (Starter or above).
+#
+# Free plan: no persistent disk, so saved connections are lost whenever the service
+# restarts, redeploys or sleeps (after ~15 idle minutes). To keep them, switch to
+# `plan: starter` and add:
+#     disk:
+#       name: jarvis-data
+#       mountPath: /data
+#       sizeGB: 1
 services:
   - type: web
     name: jarvis
     runtime: docker
-    plan: starter
+    plan: free
     healthCheckPath: /api/health
-    disk:
-      name: jarvis-data
-      mountPath: /data
-      sizeGB: 1
     envVars:
       - key: JARVIS_AUTH_USERNAME
         value: admin
@@ -18,7 +21,7 @@ services:
         sync: false
       # 32-byte key that encrypts stored connection passwords. Generate one with
       #   openssl rand -base64 32
-      # and keep it stable. (Without it, a key file is created on the /data disk.)
+      # and keep it stable.
       - key: JARVIS_SECRET_KEY
         sync: false
       # Render terminates TLS in front of the container.
